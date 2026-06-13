@@ -1,13 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Cover",
+  "name": "Safely",
   "version": "1.0.0",
-  "description": "Protecting payments and reducing scams everywhere online.",
-  "permissions": ["storage", "activeTab"],
+  "description": "Secure your online transactions. Seller risk check and payment protection everywhere you shop.",
+  "permissions": ["activeTab", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "Cover"
+    "default_title": "Safely",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
@@ -16,7 +21,14 @@
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
+      "css": ["content.css"],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }
