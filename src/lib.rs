@@ -1,14 +1,21 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn risk_level(score: u8) -> String {
+    if score <= 33 {
+        "low".into()
+    } else if score <= 66 {
+        "caution".into()
+    } else {
+        "high".into()
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+#[wasm_bindgen]
+pub fn risk_label(level: &str) -> String {
+    match level {
+        "low" => "Low risk".into(),
+        "caution" => "Caution".into(),
+        _ => "High risk".into(),
     }
 }

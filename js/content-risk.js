@@ -1,20 +1,15 @@
-(function () {
+(async function () {
   "use strict";
+
+  var wasmUrl = chrome.runtime.getURL("pkg/safely_extension.js");
+  var wasm = await import(wasmUrl);
+  await wasm.default(); // initializes the wasm binary
+
   if (!window.__safelyAddTab) return;
 
   var pageData = window.__safelyData;
 
   // Risk-specific helpers
-  function riskLevel(s) {
-    if (s <= 33) return "low";
-    if (s <= 66) return "caution";
-    return "high";
-  }
-  function riskLabel(l) {
-    if (l === "low") return "Low risk";
-    if (l === "caution") return "Caution";
-    return "High risk";
-  }
   function riskDesc(l) {
     if (l === "low") return "Safe to proceed";
     if (l === "caution") return "Review before proceeding";
@@ -53,7 +48,7 @@
     );
   }
 
-  var lvl = riskLevel(pageData.riskScore);
+  var lvl = wasm.risk_level(window.__safelyData.riskScore);
   var activityMax = Math.max.apply(null, pageData.seller.monthlyActivity);
   var activityBars = pageData.seller.monthlyActivity
     .map(function (v) {
@@ -90,7 +85,7 @@
     '</div><div class="safely-risk-label safely-risk-' +
     lvl +
     '">' +
-    riskLabel(lvl) +
+    wasm.risk_label(lvl) +
     '</div><div class="safely-risk-desc">' +
     riskDesc(lvl) +
     '</div></div><div class="safely-status-circle safely-circle-' +

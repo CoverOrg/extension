@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <body>
+        <script type="module">
+            import init, {
+                risk_level,
+                risk_label,
+            } from "./pkg/safely_extension.js";
+
+            async function run() {
+                await init();
+
+                console.log(risk_level(22)); // should print: low
+                console.log(risk_level(50)); // should print: caution
+                console.log(risk_level(80)); // should print: high
+
+                console.log("-------");
+
+                console.log(risk_label("low"));
+                console.log(risk_label("caution"));
+                console.log(risk_label("high"));
+            }
+
+            run();
+        </script>
+    </body>
+</html>
