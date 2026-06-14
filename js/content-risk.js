@@ -44,19 +44,9 @@
   }
 
   var lvl = wasm.risk_level(pageData.riskScore);
-  var activityMax = Math.max.apply(null, pageData.seller.monthlyActivity);
-  var activityBars = pageData.seller.monthlyActivity
-    .map(function (v) {
-      var pct = Math.round((v / activityMax) * 100);
-      return (
-        '<div class="safely-activity-bar" style="height:' +
-        Math.round((pct / 100) * 32) +
-        "px;opacity:" +
-        (0.3 + (pct / 100) * 0.7).toFixed(2) +
-        '"></div>'
-      );
-    })
-    .join("");
+  var activityBars = wasm.build_activity_bars(
+    new Uint8Array(pageData.seller.monthlyActivity),
+  );
 
   var platformRows = pageData.seller.platforms
     .map(function (p) {

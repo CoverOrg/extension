@@ -111,6 +111,26 @@
   var tabsArea = document.getElementById("safely-tabs-area");
   var toolbarInner = document.getElementById("safely-toolbar-inner");
 
+  // ── Reserve icon positions in left-to-right order BEFORE any tab loads ──
+  // This fixes the ordering problem caused by async (wasm-loading) tab files
+  // registering later than synchronous ones. Whichever tab finishes loading,
+  // its icon always lands in its pre-reserved slot.
+  var TAB_ORDER = ["risk", "intelligence", "protect"];
+  var iconSlots = {};
+
+  TAB_ORDER.forEach(function (id) {
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "safely-toolbar-icon";
+    iconDiv.dataset.open = id;
+    iconDiv.style.display = "none"; // hidden until its tab fills it
+    toolbarInner.insertBefore(iconDiv, collapseBtn);
+    iconDiv.addEventListener("click", function (e) {
+      e.stopPropagation();
+      togglePanel(id);
+    });
+    iconSlots[id] = iconDiv;
+  });
+
   function switchTab(tab) {
     currentTab = tab;
     panelTitle.textContent = tabTitles[tab] || tab;
@@ -156,20 +176,17 @@
     tabDiv.innerHTML = html;
     tabsArea.appendChild(tabDiv);
 
-    var iconDiv = document.createElement("div");
-    iconDiv.className = "safely-toolbar-icon";
-    iconDiv.dataset.open = id;
-    iconDiv.title = title;
-    iconDiv.innerHTML = iconSvg;
-    toolbarInner.insertBefore(iconDiv, collapseBtn);
+    // Fill the pre-reserved icon slot — left-to-right order was already
+    // fixed above, regardless of which tab finishes loading first.
+    var iconDiv = iconSlots[id];
+    if (iconDiv) {
+      iconDiv.title = title;
+      iconDiv.innerHTML = iconSvg;
+      iconDiv.style.display = "flex";
+    }
 
-    iconDiv.addEventListener("click", function (e) {
-      e.stopPropagation();
-      togglePanel(id);
-    });
-
-    // Automatically open the first tab that registers
-    if (tabIds.length === 1) switchTab(id);
+    // Always make "risk" the default visible tab, whenever it registers
+    if (id === "risk") switchTab(id);
     if (typeof initFn === "function") initFn(root);
   };
 
