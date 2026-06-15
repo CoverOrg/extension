@@ -3,7 +3,7 @@
 
   var wasmUrl = chrome.runtime.getURL("pkg/safely_extension.js");
   var wasm = await import(wasmUrl);
-  await wasm.default(); // initializes the wasm binary
+  await wasm.default();
 
   if (!window.__safelyAddTab) return;
 

@@ -1,4 +1,11 @@
+use serde::Deserialize;
 use wasm_bindgen::prelude::*;
+
+#[derive(Deserialize)]
+pub struct Signal {
+    #[serde(rename = "type")]
+    pub signal_type: String,
+}
 
 #[wasm_bindgen]
 pub fn risk_level(score: u8) -> String {
@@ -45,4 +52,34 @@ pub fn build_activity_bars(activity: &[u8]) -> String {
         })
         .collect::<Vec<_>>()
         .join("")
+}
+
+#[wasm_bindgen]
+pub fn analyze_signals(signals_json: &str) -> String {
+    let signals: Vec<Signal> = serde_json::from_str(signals_json).unwrap_or_default();
+
+    let total = signals.len();
+    let bad_count = signals
+        .iter()
+        .filter(|s| s.signal_type == "bad" || s.signal_type == "caution")
+        .count();
+
+    let level = if bad_count == 0 {
+        "low"
+    } else if bad_count == 1 {
+        "caution"
+    } else {
+        "high"
+    };
+
+    let text = if bad_count == 0 {
+        format!("All {} signals checked. No red flags detected.", total)
+    } else {
+        format!(
+            "{} of {} signals need your attention — review before proceeding.",
+            bad_count, total
+        )
+    };
+
+    format!(r#"{{"level":"{}","text":"{}"}}"#, level, text)
 }

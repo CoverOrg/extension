@@ -1,5 +1,10 @@
-(function () {
+(async function () {
   "use strict";
+
+  var wasmUrl = chrome.runtime.getURL("pkg/safely_extension.js");
+  var wasm = await import(wasmUrl);
+  await wasm.default();
+
   if (!window.__safelyAddTab) return;
 
   var pageData = window.__safelyData;
@@ -22,18 +27,11 @@
       .join("");
   }
 
-  var sigTotal = pageData.signals.length;
-  var sigBad = pageData.signals.filter(function (s) {
-    return s.type === "bad" || s.type === "caution";
-  }).length;
-  var summaryText =
-    sigBad === 0
-      ? "All " + sigTotal + " signals checked. No red flags detected."
-      : sigBad +
-        " of " +
-        sigTotal +
-        " signals need your attention \u2014 review before proceeding.";
-  var summaryLvl = sigBad === 0 ? "low" : sigBad === 1 ? "caution" : "high";
+  var sigResult = JSON.parse(
+    wasm.analyze_signals(JSON.stringify(pageData.signals)),
+  );
+  var summaryLvl = sigResult.level;
+  var summaryText = sigResult.text;
 
   var intelTabHTML =
     '<div class="safely-intel-summary safely-alert-' +

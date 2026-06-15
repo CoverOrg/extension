@@ -7,6 +7,7 @@
                 risk_label,
                 risk_desc,
                 build_activity_bars,
+                analyze_signals,
             } from "./pkg/safely_extension.js";
 
             async function run() {
@@ -35,6 +36,26 @@
                 ]);
                 var bars = build_activity_bars(activity);
                 console.log(bars);
+
+                console.log("-------");
+
+                var signals = [
+                    { type: "good" },
+                    { type: "good" },
+                    { type: "neutral" },
+                    { type: "info" },
+                    { type: "info" },
+                    { type: "good" },
+                    { type: "good" },
+                    { type: "caution" },
+                ];
+
+                var result = analyze_signals(JSON.stringify(signals));
+                console.log(result);
+
+                var parsed = JSON.parse(result);
+                console.log("level: ", parsed.level);
+                console.log("text: ", parsed.text);
             }
 
             run();
