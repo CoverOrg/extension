@@ -17,31 +17,6 @@
       return '<svg viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="#ff453a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
   }
-  function vBadge(s) {
-    var d, c, t;
-    if (s === "verified") {
-      d = "safely-dot-green";
-      c = "safely-badge-verified";
-      t = "Safely Verified";
-    } else if (s === "flagged") {
-      d = "safely-dot-red";
-      c = "safely-badge-flagged";
-      t = "Flagged in Safely Network";
-    } else {
-      d = "safely-dot-gray";
-      c = "safely-badge-unknown";
-      t = "Unknown";
-    }
-    return (
-      '<span class="safely-verified-badge ' +
-      c +
-      '"><span class="safely-badge-dot ' +
-      d +
-      '"></span>' +
-      t +
-      "</span>"
-    );
-  }
 
   var lvl = wasm.risk_level(pageData.riskScore);
   var activityBars = wasm.build_activity_bars(
@@ -101,7 +76,7 @@
     '</span></div><div class="safely-seller-detail"><span>Last active</span><span>' +
     pageData.seller.lastActive +
     '</span></div><div class="safely-seller-detail"><span>Verification</span>' +
-    vBadge(pageData.seller.verification) +
+    wasm.verification_badge(pageData.seller.verification) +
     "</div></div>" +
     '<div class="safely-section-label" style="margin-top:18px">Platform presence</div><div class="safely-platform-card">' +
     platformRows +

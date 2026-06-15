@@ -83,3 +83,25 @@ pub fn analyze_signals(signals_json: &str) -> String {
 
     format!(r#"{{"level":"{}","text":"{}"}}"#, level, text)
 }
+
+#[wasm_bindgen]
+pub fn verification_badge(status: &str) -> String {
+    let (dot_class, badge_class, text) = match status {
+        "verified" => (
+            "safely-dot-blue",
+            "safely-badge-verified",
+            "Safely Verified",
+        ),
+        "flagged" => (
+            "safely-dot-red",
+            "safely-badge-flagged",
+            "Flagged in Safely Network",
+        ),
+        _ => ("safely-dot-gray", "safely-badge-unknown", "Unknown"),
+    };
+
+    format!(
+        r#"<span class="safely-verified-badge {}"><span class="safely-badge-dot {}"></span>{}</span>"#,
+        badge_class, dot_class, text
+    )
+}

@@ -8,6 +8,7 @@
                 risk_desc,
                 build_activity_bars,
                 analyze_signals,
+                verification_badge,
             } from "./pkg/safely_extension.js";
 
             async function run() {
@@ -56,6 +57,12 @@
                 var parsed = JSON.parse(result);
                 console.log("level: ", parsed.level);
                 console.log("text: ", parsed.text);
+
+                console.log("-------");
+
+                console.log(verification_badge("verified"));
+                console.log(verification_badge("flagged"));
+                console.log(verification_badge("unknown"));
             }
 
             run();
