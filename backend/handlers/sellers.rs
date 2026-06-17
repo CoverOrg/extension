@@ -3,7 +3,9 @@ use chrono::NaiveDate;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::models::sellers::{Sellers, SellersRequest, SellersResponse};
+use crate::models::sellers::{
+    SellerLocation, SellerVerification, Sellers, SellersRequest, SellersResponse,
+};
 
 pub async fn create_seller(
     State(pool): State<Pool<Postgres>>,
@@ -46,11 +48,11 @@ pub async fn create_seller(
     .bind(&request.phone)
     .bind(&request.profile_url)
     .bind(None::<NaiveDate>)
-    .bind("unknown")
+    .bind(SellerVerification::Unknown)
     .bind(0_i32)
     .bind(0_i32)
     .bind(None::<f64>)
-    .bind(Some(String::from("pakistan")))
+    .bind(Some(SellerLocation::Islamabad))
     .fetch_one(&pool)
     .await
     .map_err(|e| e.to_string())?;
