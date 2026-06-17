@@ -4,17 +4,21 @@ use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
-#[sqlx()]
+#[sqlx(type_name = "report_types", rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum ReportTypes {
     Scam,
     FakeItem,
     NoDelivery,
+    WrongItem,
+    Counterfeit,
+    NonResponsive,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct FraudReports {
     pub id: Uuid,
-    pub seller_id: Uuid,
+    pub seller_id: Option<Uuid>,
     pub platform: Option<String>,
     pub platform_id: Option<Uuid>,
     pub report_type: ReportTypes,
