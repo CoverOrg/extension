@@ -30,6 +30,7 @@ async fn main() {
         .merge(routes::sellers::seller_routes())
         .merge(routes::listings::listing_routes())
         .merge(routes::analysis::analysis_routes())
+        .merge(routes::fraud_reports::fraud_reports_routes())
         .nest_service(
             "/static/",
             ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),

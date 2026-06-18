@@ -1,10 +1,10 @@
 use super::helpers::{format_account_age, format_last_active};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
+use sqlx::{Type, prelude::FromRow};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "seller_location", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum SellerLocation {
@@ -14,7 +14,7 @@ pub enum SellerLocation {
     Peshawar,
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "seller_verification", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum SellerVerification {

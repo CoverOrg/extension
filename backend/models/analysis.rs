@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sqlx::prelude::FromRow;
+use sqlx::{Type, prelude::FromRow};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "risk_level_type", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum RiskLevel {

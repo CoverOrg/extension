@@ -1,9 +1,9 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
+use sqlx::{Type, prelude::FromRow};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "listing_category", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum ListingCategory {
