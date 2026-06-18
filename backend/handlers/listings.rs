@@ -1,8 +1,7 @@
+use crate::models::listings::{Listings, ListingsRequest, ListingsResponse};
 use axum::{Json, extract::State};
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
-
-use crate::models::listings::{Listings, ListingsRequest, ListingsResponse};
 
 pub async fn create_listing(
     State(pool): State<Pool<Postgres>>,
