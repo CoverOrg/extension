@@ -38,7 +38,7 @@ CREATE TYPE listing_category AS ENUM (
     'other'
 );
 
-CREATE TYPE report_types as ENUM (
+CREATE TYPE report_types AS ENUM (
     'scam',
     'fake_item',
     'no_delivery',
@@ -51,4 +51,4 @@ CREATE TYPE risk_level_type AS ENUM (
     'low',
     'caution',
     'high'
-)
+);

@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS listings (
     category listing_category,
     image_urls TEXT[],
     posted_date DATE,
-    first_seen_at TIMESTAMPZ NOT NULL DEFAULT NOW(),
+    first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_analyzed_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(platform, listing_id)
 );
 
-CREATE INDEX idx_seller_id ON listings(seller_id);
-CREATE INDEX idx_listing_id ON listings(listing_id);
+CREATE INDEX IF NOT EXISTS idx_seller_id ON listings(seller_id);
+CREATE INDEX IF NOT EXISTS idx_listing_id ON listings(listing_id);

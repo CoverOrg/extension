@@ -28,6 +28,7 @@ async fn main() {
 
     let app = Router::new()
         .merge(routes::sellers::seller_routes())
+        .merge(routes::listings::listing_routes())
         .nest_service(
             "/static/",
             ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS sellers (
     name VARCHAR(200),
     handle VARCHAR(200),
     phone VARCHAR(20),
-    profile_url TEXT NOT NULL,
+    profile_url TEXT,
     join_date DATE,
     verification seller_verification NOT NULL DEFAULT 'unknown',
     total_deals INTEGER NOT NULL DEFAULT 0,
@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS sellers (
     UNIQUE(platform, platform_id)
 );
 
-CREATE INDEX idx_platform_id ON sellers(platform_id);
-CREATE INDEX idx_created_at ON sellers(created_at);
+CREATE INDEX IF NOT EXISTS idx_platform_id ON sellers(platform_id);
+CREATE INDEX IF NOT EXISTS idx_created_at ON sellers(created_at);

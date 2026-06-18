@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS fraud_reports (
     reported_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_seller_id ON fraud_reports(seller_id);
-CREATE INDEX idex_platform_id ON fraud_reports(platform_id);
+CREATE INDEX IF NOT EXISTS idx_fraud_seller_id ON fraud_reports(seller_id);
+CREATE INDEX IF NOT EXISTS idx_fraud_platform_id ON fraud_reports(platform_id);
