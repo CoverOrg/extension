@@ -1,7 +1,7 @@
-use crate::handlers::sellers::create_seller;
+use crate::handlers::sellers::analyze;
 use axum::{Router, routing::post};
 use sqlx::{Pool, Postgres};
 
-pub fn seller_routes() -> Router<Pool<Postgres>> {
-    Router::new().route("/sellers", post(create_seller))
+pub fn analyze_sellers() -> Router<Pool<Postgres>> {
+    Router::new().route("/api/v1/analyze", post(analyze))
 }

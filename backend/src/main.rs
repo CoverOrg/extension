@@ -27,7 +27,7 @@ async fn main() {
     run_grants(&admin_pool).await;
 
     let app = Router::new()
-        .merge(routes::sellers::seller_routes())
+        .merge(routes::sellers::analyze_sellers())
         .merge(routes::listings::listing_routes())
         .merge(routes::analysis::analysis_routes())
         .merge(routes::fraud_reports::fraud_reports_routes())
