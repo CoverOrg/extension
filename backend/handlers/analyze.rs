@@ -8,6 +8,7 @@ use crate::{
     services::{
         analysis::create_analysis,
         claude::call_claude,
+        fraud_reports::{build_network_summary, count_fraud_reports},
         listings::{create_listing, find_listing},
         scoring::calculate_risk_score,
         sellers::{create_seller, find_seller},
@@ -56,6 +57,11 @@ pub async fn analyze(
             .map_err(|e| e.to_string())?,
     };
 
+    let fraud_count = count_fraud_reports(&pool, seller.id)
+        .await
+        .map_err(|e| e.to_string())?;
+    let network_summary = build_network_summary(fraud_count);
+
     let listing = match find_listing(&pool, &request.listing_url)
         .await
         .map_err(|e| e.to_string())?
@@ -85,7 +91,7 @@ pub async fn analyze(
     .map_err(|e| e.to_string())?;
 
     let signals = build_signals(&claude_analysis, &seller);
-    let risk_score = calculate_risk_score(&claude_analysis);
+    let risk_score = calculate_risk_score(&claude_analysis, fraud_count);
     let risk_level = match risk_score {
         0..=33 => RiskLevel::Low,
         34..=66 => RiskLevel::Caution,
@@ -106,10 +112,13 @@ pub async fn analyze(
     .await
     .map_err(|e| e.to_string())?;
 
+    let mut seller_response = SellersResponse::from(seller);
+    seller_response.network_summary = network_summary;
+
     Ok(Json(AnalyzeResponse {
         risk_score: saved_analysis.risk_score,
         risk_level: saved_analysis.risk_level,
-        seller: SellersResponse::from(seller),
+        seller: seller_response,
         signals,
         network_summary: claude_analysis.overall_risk_notes,
     }))

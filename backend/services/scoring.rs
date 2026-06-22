@@ -1,6 +1,6 @@
 use crate::services::claude::ClaudeAnalysis;
 
-pub fn calculate_risk_score(analysis: &ClaudeAnalysis) -> i16 {
+pub fn calculate_risk_score(analysis: &ClaudeAnalysis, fraud_count: i64) -> i16 {
     let mut score: i16 = 0;
 
     if analysis.urgency_language.found {
@@ -24,6 +24,13 @@ pub fn calculate_risk_score(analysis: &ClaudeAnalysis) -> i16 {
     if analysis.image_authenticity.verdict != "original" {
         score += 10;
     }
+
+    score += match fraud_count {
+        0 => 0,
+        1 => 20,
+        2 => 35,
+        _ => 50,
+    };
 
     score.min(100)
 }
