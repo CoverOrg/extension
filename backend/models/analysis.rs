@@ -4,7 +4,10 @@ use serde_json::Value;
 use sqlx::{Type, prelude::FromRow};
 use uuid::Uuid;
 
-use crate::models::{listings::ListingCategory, sellers::SellerLocation};
+use crate::models::{
+    listings::ListingCategory,
+    sellers::{SellerLocation, SellersResponse},
+};
 
 #[derive(Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "risk_level_type", rename_all = "snake_case")]
@@ -61,6 +64,15 @@ pub struct AnalyzeRequest {
     pub seller_profile_url: Option<String>,
     pub seller_join_date: Option<String>,
     pub seller_location: Option<SellerLocation>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AnalyzeResponse {
+    pub risk_score: i16,
+    pub risk_level: RiskLevel,
+    pub seller: SellersResponse,
+    pub signals: Vec<Signal>,
+    pub network_summary: String,
 }
 
 #[derive(Debug, Serialize)]

@@ -133,7 +133,7 @@ pub async fn call_claude(
     title: &str,
     price: i64,
     description: &str,
-) -> Result<(), reqwest::Error> {
+) -> Result<ClaudeAnalysis, reqwest::Error> {
     let client = Client::new();
     let api_key = std::env::var("ANTHROPIC_API_KEY")
         .expect("ANTHROPIC_API_URL needs to be present in the .env file");
@@ -177,7 +177,5 @@ pub async fn call_claude(
     let analysis: ClaudeAnalysis =
         serde_json::from_str(inner_json).expect("failed to parse Claude's analysis JSON");
 
-    println!("{:?}", analysis);
-
-    Ok(())
+    Ok(analysis)
 }

@@ -1,14 +1,17 @@
 use crate::{
     models::{
-        analysis::AnalyzeRequest,
+        analysis::{AnalyzeRequest, AnalyzeResponse, RiskLevel},
         helpers::format_account_age,
         listings::ListingsRequest,
         sellers::{SellersRequest, SellersResponse},
     },
     services::{
+        analysis::create_analysis,
         claude::call_claude,
         listings::{create_listing, find_listing},
+        scoring::calculate_risk_score,
         sellers::{create_seller, find_seller},
+        signals::build_signals,
     },
 };
 use axum::{Json, extract::State};
@@ -17,7 +20,7 @@ use sqlx::{Pool, Postgres};
 pub async fn analyze(
     State(pool): State<Pool<Postgres>>,
     Json(request): Json<AnalyzeRequest>,
-) -> Result<Json<SellersResponse>, String> {
+) -> Result<Json<AnalyzeResponse>, String> {
     let seller_req = SellersRequest {
         platform: request.platform.clone(),
         platform_id: request.seller_platform_id.clone(),
@@ -68,7 +71,7 @@ pub async fn analyze(
         .map(|d| format_account_age(d))
         .unwrap_or_else(|| "Unknown".to_string());
 
-    let _ = call_claude(
+    let claude_analysis = call_claude(
         &listing.platform,
         seller.name.as_deref().unwrap_or("Unknown"),
         &account_age,
@@ -78,7 +81,36 @@ pub async fn analyze(
         listing.price.unwrap_or(0),
         listing.description.as_deref().unwrap_or(""),
     )
-    .await;
+    .await
+    .map_err(|e| e.to_string())?;
 
-    Ok(Json(SellersResponse::from(seller)))
+    let signals = build_signals(&claude_analysis, &seller);
+    let risk_score = calculate_risk_score(&claude_analysis);
+    let risk_level = match risk_score {
+        0..=33 => RiskLevel::Low,
+        34..=66 => RiskLevel::Caution,
+        _ => RiskLevel::High,
+    };
+
+    let signals_json = serde_json::to_value(&signals).map_err(|e| e.to_string())?;
+
+    let saved_analysis = create_analysis(
+        &pool,
+        listing.id,
+        risk_score,
+        risk_level,
+        signals_json,
+        claude_analysis.overall_risk_notes.clone(),
+        String::new(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(Json(AnalyzeResponse {
+        risk_score: saved_analysis.risk_score,
+        risk_level: saved_analysis.risk_level,
+        seller: SellersResponse::from(seller),
+        signals,
+        network_summary: claude_analysis.overall_risk_notes,
+    }))
 }
