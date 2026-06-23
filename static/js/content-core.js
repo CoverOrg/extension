@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   "use strict";
   if (document.getElementById("safely-root")) return;
 
@@ -11,79 +11,105 @@
   var tabIds = [];
   var tabTitles = {};
 
-  // Shared Data accessible by all tabs
+  function detectPlatform() {
+    var url = window.location.href;
+    if (url.includes("olx.com.pk")) return "olx";
+    if (url.includes("facebook.com")) return "facebook";
+    return "unknown";
+  }
+
   window.__safelyData = {
-    riskScore: 22,
+    riskScore: 0,
     seller: {
-      name: "Ali Khan",
-      handle: "@alikhan_93",
-      accountAge: "3 years, 2 months",
-      verification: "verified",
-      totalDeals: 142,
+      name: "Unknown",
+      handle: "",
+      accountAge: "Unknown",
+      verification: "unknown",
+      totalDeals: 0,
       disputes: 0,
-      completionRate: "96%",
-      location: "Lahore, PK",
-      lastActive: "2 hours ago",
-      networkSummary: "Clean record on Safely network. No fraud reports found.",
-      platforms: [
-        { name: "Facebook", status: "Active · 3 yr", type: "active" },
-        { name: "OLX", status: "Active · 1 yr", type: "active" },
-        { name: "Instagram", status: "Not found", type: "none" },
-        { name: "Safely network", status: "142 deals", type: "active" },
-      ],
-      monthlyActivity: [4, 6, 8, 9, 7, 11, 10, 5, 9, 8, 12, 3],
+      completionRate: "N/A",
+      location: "",
+      lastActive: "Unknown",
+      networkSummary: "Could not connect to Cover server.",
+      platforms: [],
+      monthlyActivity: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
-    signals: [
-      {
-        label: "Price analysis",
-        sub: "Rs. 85,000 vs market avg Rs. 88,000",
-        value: "Normal range",
-        type: "good",
-      },
-      {
-        label: "Urgency language",
-        sub: "Scanned listing text and captions",
-        value: "None found",
-        type: "good",
-      },
-      {
-        label: "Advance payment request",
-        sub: "Checked listing and comments",
-        value: "Not detected",
-        type: "neutral",
-      },
-      {
-        label: "Account age",
-        sub: "Cross-referenced with Safely records",
-        value: "3 yr 2 mo",
-        type: "info",
-      },
-      {
-        label: "Duplicate listing",
-        sub: "Checked across OLX and Facebook",
-        value: "No duplicates",
-        type: "good",
-      },
-      {
-        label: "Image authenticity",
-        sub: "AI-generated and stock photo check",
-        value: "Original",
-        type: "good",
-      },
-      {
-        label: "Fraud pattern match",
-        sub: "Checked against Safely scam database",
-        value: "No match",
-        type: "good",
-      },
-      {
-        label: "Contact info in listing",
-        sub: "Phone number detected in listing text",
-        value: "Detected",
-        type: "caution",
-      },
-    ],
+    signals: [],
   };
+
+  async function fetchAnalysis() {
+    var platform = detectPlatform();
+    var listing_url = window.location.href;
+
+    try {
+      var response = await fetch("http://localhost:3000/api/v1/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platform: platform,
+          listing_url: listing_url,
+          seller_id: null,
+          listing_id: null,
+          title: null,
+          price: null,
+          description: null,
+          category: null,
+          image_urls: null,
+          posted_date: null,
+          seller_platform_id: null,
+          seller_name: null,
+          seller_handle: null,
+          seller_phone: null,
+          seller_profile_url: null,
+          seller_join_date: null,
+          seller_location: null,
+        }),
+      });
+
+      var rawText = await response.text();
+      console.log("status:", response.status, "ok:", response.ok);
+      console.log("body:", rawText.substring(0, 100));
+
+      if (!response.ok) {
+        console.error("Safely: backend error:", rawText);
+        return;
+      }
+
+      var data = JSON.parse(rawText);
+
+      window.__safelyData = {
+        riskScore: data.risk_score,
+        seller: {
+          name: data.seller.name || "Unknown",
+          handle: data.seller.handle || "",
+          accountAge: data.seller.account_age,
+          verification: data.seller.verification,
+          totalDeals: data.seller.total_deals,
+          disputes: data.seller.disputes,
+          completionRate: data.seller.completion_rate,
+          location: data.seller.location || "",
+          lastActive: data.seller.last_active || "Unknown",
+          networkSummary: data.seller.network_summary,
+          platforms: data.seller.platforms,
+          monthlyActivity: data.seller.monthly_activity,
+        },
+        signals: data.signals.map(function (s) {
+          return {
+            label: s.label,
+            sub: s.sub,
+            value: s.value,
+            type: s.type,
+          };
+        }),
+      };
+
+      window.dispatchEvent(new CustomEvent("safely-data-ready"));
+    } catch (error) {
+      console.error("Safely: failed to fetch analysis", error);
+    }
+  }
 
   // Base DOM Structure
   var root = document.createElement("div");
@@ -279,4 +305,6 @@
       }, 150);
     }
   });
+
+  await fetchAnalysis();
 })();
