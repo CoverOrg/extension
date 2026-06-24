@@ -49,20 +49,42 @@
     var descEl = document.querySelector("div._7a99ad24 span");
     data.description = descEl ? descEl.innerText.trim() : null;
 
-    // seller name
-    var sellerNameEl = document.querySelector("span._8206696c.b7af14b4");
-    data.seller_name = sellerNameEl ? sellerNameEl.innerText.trim() : null;
+    // seller name — navigate via "Posted by" label
+    var postedByLabel = Array.from(
+      document.querySelectorAll("span._9083bec6._1fcb6673"),
+    ).find(function (el) {
+      return el.innerText.trim() === "Posted by";
+    });
+    if (postedByLabel) {
+      var nameContainer = postedByLabel.parentElement.nextElementSibling;
+      var nameEl = nameContainer
+        ? nameContainer.querySelector("span._8206696c.b7af14b4")
+        : null;
+      data.seller_name = nameEl ? nameEl.innerText.trim() : null;
+    } else {
+      data.seller_name = null;
+    }
 
     // member since — find the span after "Member Since" label
+    // member since
     var memberSinceLabel = Array.from(
       document.querySelectorAll("span._9083bec6._1fcb6673"),
     ).find(function (el) {
       return el.innerText.trim() === "Member Since";
     });
-    data.seller_join_date =
-      memberSinceLabel && memberSinceLabel.nextElementSibling
-        ? "Member since " + memberSinceLabel.nextElementSibling.innerText.trim()
+    if (memberSinceLabel) {
+      var yearEl = memberSinceLabel.parentElement.querySelector(
+        "span._8206696c.b7af14b4",
+      );
+      if (!yearEl) {
+        yearEl = memberSinceLabel.nextElementSibling;
+      }
+      data.seller_join_date = yearEl
+        ? "Member since " + yearEl.innerText.trim()
         : null;
+    } else {
+      data.seller_join_date = null;
+    }
 
     // seller profile url and platform id
     var profileLink = document.querySelector("a.da952dfc");
@@ -91,7 +113,7 @@
       completionRate: "N/A",
       location: "",
       lastActive: "Unknown",
-      networkSummary: "Could not connect to Cover server.",
+      networkSummary: "Could not connect to Safely server.",
       platforms: [],
       monthlyActivity: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
@@ -105,8 +127,10 @@
     // scrape real data if on OLX
     var scraped = {};
     if (platform === "olx") {
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 1500);
+      });
       scraped = scrapeOLX();
-      console.log("Safely: scraped data:", scraped);
     }
 
     try {

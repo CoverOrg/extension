@@ -26,6 +26,11 @@ pub async fn create_seller(
     request: &SellersRequest,
 ) -> Result<Sellers, Error> {
     let id = Uuid::now_v7();
+    let join_date = request.join_date.as_deref().and_then(|s| {
+        let year_str = s.split_whitespace().last()?;
+        let year: i32 = year_str.parse().ok()?;
+        NaiveDate::from_ymd_opt(year, 1, 1)
+    });
 
     let seller = sqlx::query_as::<_, Sellers>(
         "
@@ -54,6 +59,7 @@ pub async fn create_seller(
         ON CONFLICT (platform, platform_id)
         DO UPDATE SET
             name = COALESCE(EXCLUDED.name, sellers.name),
+            join_date = COALESCE(EXCLUDED.join_date, sellers.join_date),
             updated_at = NOW()
         RETURNING *
         ",
@@ -65,7 +71,7 @@ pub async fn create_seller(
     .bind(&request.handle)
     .bind(&request.phone)
     .bind(&request.profile_url)
-    .bind(None::<NaiveDate>)
+    .bind(join_date)
     .bind(SellerVerification::Unknown)
     .bind(0_i32)
     .bind(0_i32)

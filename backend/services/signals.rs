@@ -48,7 +48,7 @@ pub fn build_signals(analysis: &ClaudeAnalysis, seller: &Sellers) -> Vec<Signal>
 
     signals.push(Signal {
         label: "Account age".to_string(),
-        sub: "Cross-referenced with Cover records".to_string(),
+        sub: "Cross-referenced with Safely records".to_string(),
         value: seller
             .join_date
             .map(|d| format_account_age(d))
