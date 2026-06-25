@@ -88,7 +88,6 @@ pub fn content(
     let claude_content = format!(
         r#"
         You are a fraud detection assistant for an online marketplace.
-
         Analyze this listing and seller, then return ONLY a raw JSON object with no markdown, no code fences, no backticks, no explanation. Start your response with {{ and end with }}.
 
         Platform: {platform}
@@ -99,6 +98,8 @@ pub fn content(
         Listing title: {title}
         Listing price: PKR {price}
         Listing description: {description}
+
+        For the duplicate_listing field: check if the description appears generic, templated, or copy-pasted. Look for mismatched details between title and description, no item-specific information like serial numbers or condition details, language that could apply to any listing of this type rather than this specific item. Set found to true if the listing appears to be a template or copy rather than an original genuine listing.
 
         Return JSON in exactly this shape:
 
@@ -135,7 +136,6 @@ pub fn content(
         }}
         "#,
     );
-
     claude_content
 }
 
@@ -148,7 +148,7 @@ pub async fn call_claude(
     title: &str,
     price: i64,
     description: &str,
-    image_urls: &[String],
+    _image_urls: &[String],
 ) -> Result<ClaudeAnalysis, reqwest::Error> {
     let client = Client::new();
     let api_key = std::env::var("ANTHROPIC_API_KEY")
