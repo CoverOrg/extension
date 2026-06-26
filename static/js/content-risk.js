@@ -43,7 +43,10 @@
 
   if (!window.__safelyAddTab) return;
 
-  function buildRiskTab() {
+  // track current active sub-tab
+  var currentRiskSubTab = "seller";
+
+  function buildSellerSection() {
     var pageData = window.__safelyData;
     var lvl = wasm.risk_level(pageData.riskScore);
     var activityBars = wasm.build_activity_bars(
@@ -81,9 +84,9 @@
       pageData.seller.completionRate +
       '</div><div class="safely-chip-lbl">Completion Rate</div></div></div>' +
       '<div class="safely-section-label">Seller Information</div><div class="safely-seller-card"><div class="safely-seller-name">' +
-      pageData.seller.name +
+      (pageData.seller.name || "Unknown") +
       '</div><div class="safely-seller-handle">' +
-      pageData.seller.handle +
+      (pageData.seller.handle || "") +
       '</div><div class="safely-seller-detail"><span>Account age</span><span>' +
       pageData.seller.accountAge +
       '</span></div><div class="safely-seller-detail"><span>Location</span><span>' +
@@ -107,19 +110,138 @@
     );
   }
 
+  function buildReportSection() {
+    return (
+      '<div class="safely-report-section">' +
+      '<div class="safely-section-label">Report this seller</div>' +
+      '<p class="safely-report-desc">If you experienced fraud or suspicious behavior from this seller, help protect others by submitting a report.</p>' +
+      '<div class="safely-section-label" style="margin-top:14px">Select reason</div>' +
+      '<div class="safely-report-reasons" id="safely-report-reasons">' +
+      '<label class="safely-report-reason"><input type="radio" name="safely-report-reason" value="scam"><div class="safely-report-reason-text"><span class="safely-report-reason-name">Scam</span><span class="safely-reason-desc">Seller took payment and disappeared</span></div></label>' +
+      '<label class="safely-report-reason"><input type="radio" name="safely-report-reason" value="fake_item"><div class="safely-report-reason-text"><span class="safely-report-reason-name">Fake item</span><span class="safely-reason-desc">Item was counterfeit or misrepresented</span></div></label>' +
+      '<label class="safely-report-reason"><input type="radio" name="safely-report-reason" value="no_delivery"><div class="safely-report-reason-text"><span class="safely-report-reason-name">No delivery</span><span class="safely-reason-desc">Payment sent but item never arrived</span></div></label>' +
+      '<label class="safely-report-reason"><input type="radio" name="safely-report-reason" value="wrong_item"><div class="safely-report-reason-text"><span class="safely-report-reason-name">Wrong item</span><span class="safely-reason-desc">Received something different</span></div></label>' +
+      '<label class="safely-report-reason"><input type="radio" name="safely-report-reason" value="non_responsive"><div class="safely-report-reason-text"><span class="safely-report-reason-name">Non responsive</span><span class="safely-reason-desc">Seller stopped responding after payment</span></div></label>' +
+      "</div>" +
+      '<button class="safely-report-btn" id="safely-report-submit">Submit Report</button>' +
+      '<div class="safely-report-success" id="safely-report-success" style="display:none">' +
+      "<span>&#10003;</span> Report submitted. Thank you for helping protect the community." +
+      "</div>" +
+      "</div>"
+    );
+  }
+
+  function buildRiskTab() {
+    var sellerVisible = currentRiskSubTab === "seller";
+    return (
+      '<div class="safely-sub-tabs">' +
+      '<button class="safely-sub-tab' +
+      (sellerVisible ? " safely-active" : "") +
+      '" id="safely-risk-subtab-seller">Risk</button>' +
+      '<button class="safely-sub-tab' +
+      (!sellerVisible ? " safely-active" : "") +
+      '" id="safely-risk-subtab-report">Report</button>' +
+      "</div>" +
+      '<div id="safely-risk-seller-content"' +
+      (sellerVisible ? "" : ' style="display:none"') +
+      ">" +
+      buildSellerSection() +
+      "</div>" +
+      '<div id="safely-risk-report-content"' +
+      (!sellerVisible ? "" : ' style="display:none"') +
+      ">" +
+      buildReportSection() +
+      "</div>"
+    );
+  }
+
+  function attachRiskTabListeners() {
+    var root = document.getElementById("safely-tab-risk");
+    if (!root) return;
+
+    // sub-tab switching
+    var sellerBtn = root.querySelector("#safely-risk-subtab-seller");
+    var reportBtn = root.querySelector("#safely-risk-subtab-report");
+    var sellerContent = root.querySelector("#safely-risk-seller-content");
+    var reportContent = root.querySelector("#safely-risk-report-content");
+
+    if (sellerBtn) {
+      sellerBtn.addEventListener("click", function () {
+        currentRiskSubTab = "seller";
+        sellerBtn.classList.add("safely-active");
+        reportBtn.classList.remove("safely-active");
+        sellerContent.style.display = "";
+        reportContent.style.display = "none";
+      });
+    }
+
+    if (reportBtn) {
+      reportBtn.addEventListener("click", function () {
+        currentRiskSubTab = "report";
+        reportBtn.classList.add("safely-active");
+        sellerBtn.classList.remove("safely-active");
+        reportContent.style.display = "";
+        sellerContent.style.display = "none";
+      });
+    }
+
+    // report submission
+    var submitBtn = root.querySelector("#safely-report-submit");
+    if (submitBtn) {
+      submitBtn.addEventListener("click", function () {
+        var selected = root.querySelector(
+          'input[name="safely-report-reason"]:checked',
+        );
+        if (!selected) {
+          alert("Please select a reason before submitting.");
+          return;
+        }
+
+        var pageData = window.__safelyData;
+        submitBtn.textContent = "Submitting...";
+        submitBtn.disabled = true;
+
+        fetch("http://localhost:3000/api/v1/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            platform: pageData.seller.platform || "olx",
+            seller_platform_id: pageData.seller.platformId || null,
+            report_type: selected.value,
+            description: null,
+          }),
+        })
+          .then(function () {
+            var success = root.querySelector("#safely-report-success");
+            if (success) success.style.display = "flex";
+            submitBtn.style.display = "none";
+          })
+          .catch(function () {
+            submitBtn.textContent = "Submit Report";
+            submitBtn.disabled = false;
+            alert("Failed to submit report. Please try again.");
+          });
+      });
+    }
+  }
+
   window.__safelyAddTab(
     "risk",
-    "Risk & Seller",
+    "Risk",
     buildRiskTab(),
     '<svg viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="9 12 11 14 15 10"/></svg>',
     function () {
       if (window.__safelyPreventInputBubbling)
         window.__safelyPreventInputBubbling();
+      attachRiskTabListeners();
     },
   );
 
   window.addEventListener("safely-data-ready", function () {
     var tabEl = document.getElementById("safely-tab-risk");
-    if (tabEl) tabEl.innerHTML = buildRiskTab();
+    if (tabEl) {
+      tabEl.innerHTML = buildRiskTab();
+      attachRiskTabListeners();
+    }
   });
 })();
