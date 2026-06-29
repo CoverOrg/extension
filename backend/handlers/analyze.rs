@@ -9,7 +9,7 @@ use crate::{
         analysis::create_analysis,
         claude::call_claude,
         fraud_reports::{build_network_summary, count_fraud_reports},
-        listings::create_listing,
+        listings::{create_listing, get_monthly_visit_activity},
         scoring::calculate_risk_score,
         sellers::{create_seller, find_seller},
         signals::build_signals,
@@ -121,8 +121,13 @@ pub async fn analyze(
     .await
     .map_err(|e| e.to_string())?;
 
+    let monthly_activity = get_monthly_visit_activity(&pool, seller.id)
+        .await
+        .unwrap_or_else(|_| vec![0i32; 12]);
+
     let mut seller_response = SellersResponse::from(seller);
     seller_response.network_summary = network_summary;
+    seller_response.monthly_activity = monthly_activity;
 
     Ok(Json(AnalyzeResponse {
         risk_score: saved_analysis.risk_score,

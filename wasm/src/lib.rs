@@ -50,15 +50,17 @@ pub fn risk_desc(desc: &str) -> String {
 #[wasm_bindgen]
 pub fn build_activity_bars(activity: &[u8]) -> String {
     let max = *activity.iter().max().unwrap_or(&1) as f64;
+    let max = if max == 0.0 { 1.0 } else { max };
     activity
         .iter()
-        .map(|&v| {
+        .enumerate()
+        .map(|(_i, &v)| {
             let pct = (v as f64 / max * 100.0).round();
-            let height_px = (pct / 100.0 * 32.0).round() as u32;
-            let opacity = 0.3 + (pct / 100.0) * 0.7;
+            let height_px = ((pct / 100.0 * 28.0).round() as u32).max(2);
+            let opacity = if v == 0 { 0.15 } else { 0.3 + (pct / 100.0) * 0.7 };
             format!(
-                r#"<div class="safely-activity-bar" style="height:{}px;opacity:{:.2}"></div>"#,
-                height_px, opacity
+                r#"<div class="safely-activity-bar" style="height:{}px;opacity:{:.2};position:relative;cursor:pointer;" title="{} visit{}" data-visits="{}"></div>"#,
+                height_px, opacity, v, if v == 1 { "" } else { "s" }, v
             )
         })
         .collect::<Vec<_>>()

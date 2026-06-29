@@ -1,4 +1,5 @@
-use sqlx::{Error, Pool, Postgres};
+use chrono::Datelike;
+use sqlx::{Error, Pool, Postgres, Row};
 use uuid::Uuid;
 
 use crate::models::listings::{Listings, ListingsRequest};
@@ -75,4 +76,43 @@ pub async fn create_listing(
     .await?;
 
     Ok(listing)
+}
+
+pub async fn get_monthly_visit_activity(
+    pool: &Pool<Postgres>,
+    seller_id: Uuid,
+) -> Result<Vec<i32>, Error> {
+    let rows = sqlx::query(
+        "
+        SELECT
+            DATE_TRUNC('month', a.created_at) as month,
+            COUNT(*)::int as visits
+        FROM analysis a
+        JOIN listings l ON a.listing_id = l.id
+        WHERE l.seller_id = $1
+            AND a.created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY month
+        ORDER BY month ASC
+        ",
+    )
+    .bind(seller_id)
+    .fetch_all(pool)
+    .await?;
+
+    // build a 12-element array, one per month going back from current month
+    let now = chrono::Utc::now();
+    let mut activity = vec![0i32; 12];
+
+    for row in rows {
+        let month_dt: chrono::DateTime<chrono::Utc> = row.get("month");
+        let months_ago =
+            (now.year() - month_dt.year()) * 12 + (now.month() as i32 - month_dt.month() as i32);
+        let index = 11 - months_ago;
+        if index >= 0 && index < 12 {
+            let visits: i32 = row.get("visits");
+            activity[index as usize] = visits;
+        }
+    }
+
+    Ok(activity)
 }

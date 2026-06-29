@@ -75,7 +75,11 @@
     var pageData = window.__safelyData;
     var lvl = wasm.risk_level(pageData.riskScore);
     var activityBars = wasm.build_activity_bars(
-      new Uint8Array(pageData.seller.monthlyActivity),
+      new Uint8Array(
+        pageData.seller.monthlyActivity.map(function (v) {
+          return Math.min(255, Math.max(0, v));
+        }),
+      ),
     );
     var platformRows = wasm.build_platform_rows(
       JSON.stringify(pageData.seller.platforms),
@@ -140,9 +144,43 @@
       '<div class="safely-section-label" style="margin-top:18px">Platform presence</div><div class="safely-platform-card">' +
       platformRows +
       "</div>" +
-      '<div class="safely-section-label" style="margin-top:18px">Deal activity \u2014 12 months</div><div class="safely-activity-card"><div style="display:flex;align-items:flex-end;gap:3px;height:32px">' +
+      '<div class="safely-section-label" style="margin-top:18px">Visit activity \u2014 12 months</div>' +
+      '<div class="safely-activity-card"><div style="display:flex;align-items:flex-end;gap:3px;height:32px">' +
       activityBars +
-      '</div><div style="display:flex;justify-content:space-between;margin-top:5px"><span style="font-size:10px;color:#636366">Jul</span><span style="font-size:10px;color:#636366">Jun</span></div></div>' +
+      "</div>" +
+      (function () {
+        var months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        var now = new Date();
+        var labels = [];
+        for (var i = 11; i >= 0; i--) {
+          var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          labels.push(months[d.getMonth()]);
+        }
+        return (
+          '<div style="display:flex;justify-content:space-between;margin-top:5px">' +
+          '<span style="font-size:10px;color:#636366">' +
+          labels[0] +
+          "</span>" +
+          '<span style="font-size:10px;color:#636366">' +
+          labels[11] +
+          "</span>" +
+          "</div>"
+        );
+      })() +
+      "</div>" +
       '<div class="safely-network-alert safely-alert-' +
       lvl +
       '" style="margin-top:14px"><span>&#9679;</span><span>' +
