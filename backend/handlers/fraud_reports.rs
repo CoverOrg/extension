@@ -24,20 +24,19 @@ pub async fn create_fraud_report(
     };
 
     let id = Uuid::now_v7();
-    let report_type = request.report_type.to_string();
 
-    let result = sqlx::query(
+    sqlx::query(
         "INSERT INTO fraud_reports (
             id, seller_id, platform, platform_id,
             report_type, description, reported_at
         )
-        VALUES ($1, $2, $3, $4, $5::report_types, $6, NOW())",
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())",
     )
     .bind(id)
     .bind(seller_id)
     .bind(&request.platform)
     .bind(request.platform_id.as_deref().unwrap_or(""))
-    .bind(&report_type)
+    .bind(&request.report_type)
     .bind(&request.description)
     .execute(&pool)
     .await

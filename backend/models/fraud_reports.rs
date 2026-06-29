@@ -30,7 +30,7 @@ pub struct FraudReports {
 pub struct FraudReportsRequest {
     pub platform: String,
     pub platform_id: Option<String>,
-    pub report_type: String,
+    pub report_type: ReportTypes,
     pub description: Option<String>,
 }
 

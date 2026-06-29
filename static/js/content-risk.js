@@ -94,7 +94,7 @@
         : pageData.seller.verification === "verified"
           ? "Verified"
           : "Unknown") +
-      '</div><div class="safely-chip-lbl">Cover Status</div></div>' +
+      '</div><div class="safely-chip-lbl">Status</div></div>' +
       '<div class="safely-chip"><div class="safely-chip-num" style="color:#a0a0a0;text-transform:capitalize">' +
       (pageData.seller.platform || "Unknown") +
       '</div><div class="safely-chip-lbl">Platform</div></div>' +
@@ -109,7 +109,7 @@
       (pageData.seller.location || "Unknown") +
       '</span></div><div class="safely-seller-detail"><span>Last active</span><span>' +
       pageData.seller.lastActive +
-      '</span></div><div class="safely-seller-detail"><span>Verification</span>' +
+      '</span></div><div class="safely-seller-detail"><span>Status</span>' +
       wasm.verification_badge(pageData.seller.verification) +
       "</div></div>" +
       '<div class="safely-section-label" style="margin-top:18px">Platform presence</div><div class="safely-platform-card">' +
