@@ -145,9 +145,11 @@
       platformRows +
       "</div>" +
       '<div class="safely-section-label" style="margin-top:18px">Visit activity \u2014 12 months</div>' +
-      '<div class="safely-activity-card"><div style="display:flex;align-items:flex-end;gap:3px;height:44px">' +
+      '<div class="safely-activity-card">' +
+      '<div style="display:flex;align-items:flex-end;gap:3px;height:56px">' +
       activityBars +
       "</div>" +
+      '<div style="display:flex;gap:3px;margin-top:4px">' +
       (function () {
         var months = [
           "Jan",
@@ -163,23 +165,17 @@
           "Nov",
           "Dec",
         ];
-        var now = new Date();
-        var labels = [];
-        for (var i = 11; i >= 0; i--) {
-          var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          labels.push(months[d.getMonth()]);
-        }
-        return (
-          '<div style="display:flex;justify-content:space-between;margin-top:5px">' +
-          '<span style="font-size:10px;color:#636366">' +
-          labels[0] +
-          "</span>" +
-          '<span style="font-size:10px;color:#636366">' +
-          labels[11] +
-          "</span>" +
-          "</div>"
-        );
+        return months
+          .map(function (m) {
+            return (
+              '<span style="flex:1;text-align:center;font-size:8px;color:#ffffff;">' +
+              m +
+              "</span>"
+            );
+          })
+          .join("");
       })() +
+      "</div>" +
       "</div>" +
       '<div class="safely-network-alert safely-alert-' +
       lvl +

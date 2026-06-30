@@ -85,12 +85,11 @@ pub async fn get_monthly_visit_activity(
     let rows = sqlx::query(
         "
         SELECT
-            DATE_TRUNC('month', a.created_at) as month,
+            EXTRACT(MONTH FROM a.created_at)::int as month,
             COUNT(*)::int as visits
         FROM analysis a
         JOIN listings l ON a.listing_id = l.id
         WHERE l.seller_id = $1
-            AND a.created_at >= NOW() - INTERVAL '12 months'
         GROUP BY month
         ORDER BY month ASC
         ",
@@ -99,18 +98,13 @@ pub async fn get_monthly_visit_activity(
     .fetch_all(pool)
     .await?;
 
-    // build a 12-element array, one per month going back from current month
-    let now = chrono::Utc::now();
     let mut activity = vec![0i32; 12];
-
     for row in rows {
-        let month_dt: chrono::DateTime<chrono::Utc> = row.get("month");
-        let months_ago =
-            (now.year() - month_dt.year()) * 12 + (now.month() as i32 - month_dt.month() as i32);
-        let index = 11 - months_ago;
-        if index >= 0 && index < 12 {
-            let visits: i32 = row.get("visits");
-            activity[index as usize] = visits;
+        let month: i32 = row.get("month");
+        let visits: i32 = row.get("visits");
+        let index = (month - 1) as usize;
+        if index < 12 {
+            activity[index] = visits;
         }
     }
 
