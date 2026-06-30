@@ -1,0 +1,135 @@
+// api.js — all fetch calls to backend: analyze, report
+(function () {
+  "use strict";
+
+  var API_BASE = "http://localhost:3000/api/v1";
+
+  window.__safelyAPI = {
+    analyze: async function (scrapedData) {
+      try {
+        var response = await fetch(API_BASE + "/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(scrapedData),
+        });
+
+        var rawText = await response.text();
+        if (!response.ok || rawText.startsWith("error")) {
+          console.error("Safely: backend error:", rawText.substring(0, 300));
+          return null;
+        }
+
+        return JSON.parse(rawText);
+      } catch (error) {
+        console.error(
+          "Safely: failed to fetch analysis",
+          error.message,
+          error.stack,
+        );
+        return null;
+      }
+    },
+
+    submitReport: async function (reportData) {
+      try {
+        var response = await fetch(API_BASE + "/report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(reportData),
+        });
+
+        var rawText = await response.text();
+        if (!response.ok || rawText.startsWith("error")) {
+          console.error("Safely: report error:", rawText.substring(0, 300));
+          return null;
+        }
+
+        return JSON.parse(rawText);
+      } catch (error) {
+        console.error(
+          "Safely: failed to submit report",
+          error.message,
+          error.stack,
+        );
+        return null;
+      }
+    },
+
+    fetchAnalysis: async function () {
+      var platform = window.__safelyScrapers.detectPlatform();
+      if (platform === "unknown") return;
+
+      var listing_url = window.location.href;
+
+      // Get scraped data from the appropriate scraper
+      var scraped = {};
+      if (platform === "olx") {
+        await new Promise(function (resolve) {
+          setTimeout(resolve, 1500);
+        });
+        scraped = window.__safelyScrapers.scrapeOLX();
+      } else if (platform === "facebook") {
+        scraped = window.__safelyScrapers.scrapeFacebook();
+      }
+
+      var payload = {
+        platform: platform,
+        listing_url: listing_url,
+        seller_id: null,
+        listing_id: scraped.listing_id || null,
+        title: scraped.title || null,
+        price: scraped.price || null,
+        description: scraped.description || null,
+        category: null,
+        image_urls: scraped.image_urls || null,
+        posted_date: null,
+        platform_id: scraped.platform_id || null,
+        seller_name: scraped.seller_name || null,
+        seller_handle: null,
+        seller_phone: null,
+        seller_profile_url: scraped.seller_profile_url || null,
+        seller_join_date: scraped.seller_join_date || null,
+        seller_location: scraped.seller_location || null,
+      };
+
+      var data = await window.__safelyAPI.analyze(payload);
+      if (!data) return;
+
+      window.__safelyData = {
+        riskScore: data.risk_score,
+        fraudReportCount: data.fraud_report_count,
+        seller: {
+          name: data.seller.name || "Unknown",
+          platform: data.seller.platform || scraped.platform || "unknown",
+          platformId: data.seller.platform_id || null,
+          handle: data.seller.handle || "",
+          accountAge: data.seller.account_age,
+          verification: data.seller.verification,
+          totalDeals: data.seller.total_deals,
+          disputes: data.seller.disputes,
+          completionRate: data.seller.completion_rate,
+          location: data.seller.location || "Unknown",
+          lastActive:
+            scraped.seller_last_active || data.seller.last_active || "Unknown",
+          networkSummary: data.seller.network_summary,
+          platforms: data.seller.platforms,
+          monthlyActivity: data.seller.monthly_activity,
+        },
+        signals: data.signals.map(function (s) {
+          return {
+            label: s.label,
+            sub: s.sub,
+            value: s.value,
+            type: s.type,
+          };
+        }),
+      };
+
+      window.dispatchEvent(new CustomEvent("safely-data-ready"));
+    },
+  };
+})();

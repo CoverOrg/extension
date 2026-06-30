@@ -1,0 +1,222 @@
+// panel.js — toolbar, panel shell, tab registration — the DOM/UI engine
+(async function () {
+  "use strict";
+  if (document.getElementById("safely-root")) return;
+
+  var panelVisible = false;
+  var toolbarExpanded = false;
+  var currentTab = "";
+  var collapseTimer;
+  var intentionallyClosed = false;
+
+  var tabIds = [];
+  var tabTitles = {};
+
+  // Base DOM Structure
+  var root = document.createElement("div");
+  root.id = "safely-root";
+  root.innerHTML =
+    '<div id="safely-panel">' +
+    '<div class="safely-panel-header">' +
+    '<span class="safely-panel-title" id="safely-panel-title">Safely</span>' +
+    '<div class="safely-close-btn" id="safely-close-btn">\u00d7</div>' +
+    "</div>" +
+    '<div class="safely-tabs-area" id="safely-tabs-area"></div>' +
+    "</div>" +
+    '<div id="safely-toolbar"><span class="safely-toolbar-letter">S</span><div class="safely-toolbar-inner" id="safely-toolbar-inner">' +
+    '<span class="safely-toolbar-label" id="safely-collapse-btn">Safely</span>' +
+    "</div></div>";
+
+  document.body.appendChild(root);
+  window.__safelyRoot = root;
+
+  var panel = document.getElementById("safely-panel");
+  var toolbar = document.getElementById("safely-toolbar");
+  var collapseBtn = document.getElementById("safely-collapse-btn");
+  var panelTitle = document.getElementById("safely-panel-title");
+  var closeBtn = document.getElementById("safely-close-btn");
+  var tabsArea = document.getElementById("safely-tabs-area");
+  var toolbarInner = document.getElementById("safely-toolbar-inner");
+
+  // Reserve icon positions in left-to-right order BEFORE any tab loads
+  var TAB_ORDER = ["risk", "intelligence", "protect"];
+  var iconSlots = {};
+
+  TAB_ORDER.forEach(function (id) {
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "safely-toolbar-icon";
+    iconDiv.dataset.open = id;
+    iconDiv.style.display = "none";
+    toolbarInner.insertBefore(iconDiv, collapseBtn);
+    iconDiv.addEventListener("click", function (e) {
+      e.stopPropagation();
+      togglePanel(id);
+    });
+    iconSlots[id] = iconDiv;
+  });
+
+  function switchTab(tab) {
+    currentTab = tab;
+    panelTitle.textContent = tabTitles[tab] || tab;
+    tabIds.forEach(function (id) {
+      var el = document.getElementById("safely-tab-" + id);
+      if (el) el.style.display = id === tab ? "block" : "none";
+    });
+    if (tabsArea) tabsArea.scrollTop = 0;
+  }
+
+  function togglePanel(tab) {
+    if (panelVisible && currentTab === tab) {
+      panelVisible = false;
+      panel.classList.remove("safely-visible");
+    } else {
+      switchTab(tab);
+      panelVisible = true;
+      panel.classList.add("safely-visible");
+    }
+  }
+
+  function closePanel() {
+    panelVisible = false;
+    panel.classList.remove("safely-visible");
+  }
+
+  function collapseToolbar() {
+    toolbarExpanded = false;
+    panelVisible = false;
+    toolbar.classList.remove("safely-toolbar-expanded");
+    panel.classList.remove("safely-visible");
+  }
+
+  // Global function for other files to register their tabs dynamically
+  window.__safelyAddTab = function (id, title, html, iconSvg, initFn) {
+    tabIds.push(id);
+    tabTitles[id] = title;
+
+    var tabDiv = document.createElement("div");
+    tabDiv.className = "safely-tab-content";
+    tabDiv.id = "safely-tab-" + id;
+    tabDiv.style.display = "none";
+    tabDiv.innerHTML = html;
+    tabsArea.appendChild(tabDiv);
+
+    var iconDiv = iconSlots[id];
+    if (iconDiv) {
+      iconDiv.title = title;
+      iconDiv.innerHTML = iconSvg;
+      iconDiv.style.display = "flex";
+    }
+
+    if (id === "risk") switchTab(id);
+    if (typeof initFn === "function") initFn(root);
+  };
+
+  // Global helper to stop inputs from bubbling to the host page
+  window.__safelyPreventInputBubbling = function () {
+    root.querySelectorAll("input, textarea, select").forEach(function (el) {
+      ["keydown", "keyup", "keypress"].forEach(function (evt) {
+        el.removeEventListener(
+          evt,
+          function (e) {
+            e.stopImmediatePropagation();
+          },
+          true,
+        );
+        el.addEventListener(
+          evt,
+          function (e) {
+            e.stopImmediatePropagation();
+          },
+          true,
+        );
+      });
+    });
+  };
+
+  // ── Toolbar Hover Events ──
+  toolbar.addEventListener("mouseenter", function () {
+    clearTimeout(collapseTimer);
+    if (intentionallyClosed) return;
+    toolbarExpanded = true;
+    toolbar.classList.add("safely-toolbar-expanded");
+  });
+
+  toolbar.addEventListener("mouseleave", function (e) {
+    if (intentionallyClosed) return;
+    if (e.relatedTarget && panel.contains(e.relatedTarget)) return;
+    collapseTimer = setTimeout(collapseToolbar, 200);
+  });
+
+  panel.addEventListener("mouseenter", function () {
+    clearTimeout(collapseTimer);
+  });
+
+  panel.addEventListener("mouseleave", function (e) {
+    if (e.relatedTarget && toolbar.contains(e.relatedTarget)) return;
+    collapseTimer = setTimeout(collapseToolbar, 200);
+  });
+
+  toolbar.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (intentionallyClosed) {
+      intentionallyClosed = false;
+      toolbarExpanded = true;
+      toolbar.classList.add("safely-toolbar-expanded");
+    }
+  });
+
+  // Clicking "Safely" label collapses and locks until mouse leaves
+  collapseBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    intentionallyClosed = true;
+    collapseToolbar();
+  });
+
+  closeBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    closePanel();
+  });
+
+  // Clicking outside closes panel and collapses toolbar (with lock)
+  document.addEventListener("click", function (e) {
+    if (!root.contains(e.target)) {
+      if (panelVisible) {
+        panelVisible = false;
+        panel.classList.remove("safely-visible");
+      }
+      if (toolbarExpanded) {
+        toolbarExpanded = false;
+        intentionallyClosed = true;
+        toolbar.classList.remove("safely-toolbar-expanded");
+      }
+    }
+  });
+
+  // Once the mouse fully leaves the root, unlock hover-expand
+  root.addEventListener("mouseleave", function () {
+    if (intentionallyClosed) {
+      setTimeout(function () {
+        intentionallyClosed = false;
+      }, 150);
+    }
+  });
+
+  // ── Fetch initial analysis ──
+  await window.__safelyAPI.fetchAnalysis();
+
+  // ── Detect URL changes for single page app navigation ──
+  var lastUrl = window.location.href;
+  new MutationObserver(function () {
+    var currentUrl = window.location.href;
+    if (currentUrl !== lastUrl) {
+      lastUrl = currentUrl;
+      if (
+        currentUrl.includes("iid-") ||
+        currentUrl.includes("facebook.com/marketplace")
+      ) {
+        window.__safelyResetState();
+        window.__safelyAPI.fetchAnalysis();
+      }
+    }
+  }).observe(document.body, { subtree: true, childList: true });
+})();

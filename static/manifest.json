@@ -26,12 +26,17 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "css": ["styles/content.css"],
+      "css": ["css/panel.css"],
       "js": [
-        "js/content-core.js",
-        "js/content-risk.js",
-        "js/content-intelligence.js",
-        "js/content-protect.js"
+        "js/core/state.js",
+        "js/scrapers/olx.js",
+        "js/scrapers/facebook.js",
+        "js/scrapers/index.js",
+        "js/core/api.js",
+        "js/core/panel.js",
+        "js/tabs/risk.js",
+        "js/tabs/intelligence.js",
+        "js/tabs/protect.js"
       ],
       "run_at": "document_idle"
     }
