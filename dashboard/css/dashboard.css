@@ -1,9 +1,9 @@
 /* ============================================================
-Everything below is state/interaction logic that Tailwind's
-utility classes can't express directly (arbitrary :has() and
-:target selectors). All appearance still comes from Tailwind
-classes in the markup - this block only decides what shows.
-============================================================ */
+     Everything below is state/interaction logic that Tailwind's
+     utility classes can't express directly (arbitrary :has() and
+     :target selectors). All appearance still comes from Tailwind
+     classes in the markup - this block only decides what shows.
+     ============================================================ */
 
 /* default hidden panels/overlays */
 #panel-history,
@@ -13,10 +13,10 @@ classes in the markup - this block only decides what shows.
 }
 
 /* single shared radio group drives ALL top-level view switching -
-nav tabs and every detail view are options in the same group, so
-picking any one automatically deselects whatever was selected
-before it. This is what lets a nav click close an open detail
-view and switch tabs in one action, with no ambiguity. */
+     nav tabs and every detail view are options in the same group, so
+     picking any one automatically deselects whatever was selected
+     before it. This is what lets a nav click close an open detail
+     view and switch tabs in one action, with no ambiguity. */
 body:has(#view-history:checked) #panel-history {
     display: block;
 }
