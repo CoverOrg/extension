@@ -33,8 +33,8 @@ async fn main() {
         .merge(routes::analyze::analyze_routes())
         .merge(routes::fraud_reports::fraud_reports_routes())
         .nest_service(
-            "/static/",
-            ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
+            "/extension/",
+            ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/extension")),
         )
         .layer(CorsLayer::permissive())
         .with_state(app_pool);
