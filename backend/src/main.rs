@@ -27,6 +27,7 @@ async fn main() {
     let app = Router::new()
         .merge(routes::analyze::analyze_routes())
         .merge(routes::fraud_reports::fraud_reports_routes())
+        .merge(routes::auth::auth_routes())
         .nest_service(
             "/dashboard/",
             ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../dashboard")),

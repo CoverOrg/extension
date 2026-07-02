@@ -5,3 +5,6 @@ pub mod listings;
 pub mod scoring;
 pub mod sellers;
 pub mod signals;
+pub mod email;
+pub mod auth;
+pub mod google_oauth;

@@ -3,3 +3,4 @@ pub mod fraud_reports;
 pub mod helpers;
 pub mod listings;
 pub mod sellers;
+pub mod users;
