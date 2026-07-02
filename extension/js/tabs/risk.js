@@ -87,9 +87,6 @@
         }),
       ),
     );
-    var platformRows = wasm.build_platform_rows(
-      JSON.stringify(pageData.seller.platforms),
-    );
 
     // 1. Circle Risk Score
     var circleHTML =
@@ -133,13 +130,7 @@
       (pageData.seller.platform || "Unknown") +
       "</span></div></div>";
 
-    // 3. Platform presence
-    var platformHTML =
-      '<div class="safely-section-label" style="margin-top:18px">Platform presence</div><div class="safely-platform-card">' +
-      platformRows +
-      "</div>";
-
-    // 4. Monthly visit activity
+    // 3. Monthly visit activity
     var activityHTML =
       '<div class="safely-section-label" style="margin-top:18px">Visit activity \u2014 12 months</div>' +
       '<div class="safely-activity-card">' +
@@ -182,9 +173,7 @@
       pageData.seller.networkSummary +
       "</span></div>";
 
-    return (
-      circleHTML + sellerCardHTML + platformHTML + activityHTML + networkHTML
-    );
+    return circleHTML + sellerCardHTML + activityHTML + networkHTML;
   }
 
   function buildReportSection() {

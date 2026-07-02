@@ -60,7 +60,6 @@ pub struct SellersResponse {
     pub location: Option<String>,
     pub last_active: Option<String>,
     pub network_summary: String,
-    pub platforms: Vec<PlatformResponse>,
     pub monthly_activity: Vec<i32>,
 }
 
@@ -93,11 +92,6 @@ impl From<Sellers> for SellersResponse {
             location: s.location,
             last_active: s.last_seen_at.map(|t| format_last_active(t)),
             network_summary: String::new(),
-            platforms: vec![PlatformResponse {
-                name: s.platform,
-                status: "Active".to_string(),
-                platform_type: "Marketplace".to_string(),
-            }],
             monthly_activity: vec![],
         }
     }

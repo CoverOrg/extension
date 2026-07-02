@@ -119,18 +119,6 @@ pub fn verification_badge(status: &str) -> String {
 }
 
 #[wasm_bindgen]
-pub fn build_platform_rows(platform_json: &str) -> String {
-    let platforms: Vec<Platform> = serde_json::from_str(platform_json).unwrap_or_default();
-    platforms.iter().map(|p| {
-        let status_class = if p.status.to_lowercase() == "active" { "active" } else { "none" };
-        format!(
-            r#"<div class="safely-platform-row"><span class="safely-platform-name">{}</span><span class="safely-platform-status safely-pstatus-{}">{}</span><span style="font-size:11px;color:#636366">{}</span></div>"#,
-            p.name, status_class, p.status, p.platform_type
-        )
-    }).collect::<Vec<_>>().join("")
-}
-
-#[wasm_bindgen]
 pub fn build_signal_rows(signals_json: &str) -> String {
     let signals: Vec<Signal> = serde_json::from_str(signals_json).unwrap_or_default();
 
